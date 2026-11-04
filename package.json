@@ -1,0 +1,31 @@
+{
+  "name": "community-rsvp",
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "vite",
+    "emulators": "firebase emulators:start --project demo-community-rsvp",
+    "seed": "node --experimental-strip-types --no-warnings scripts/seed.ts",
+    "build": "tsc && vite build",
+    "typecheck": "tsc",
+    "test": "firebase emulators:exec --only firestore --project demo-community-rsvp \"vitest run\""
+  },
+  "license": "MIT",
+  "description": "RSVP board for free community health events, built with React, TypeScript and Firebase",
+  "dependencies": {
+    "firebase": "^11.10.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "firebase-tools": "^13.35.1",
+    "typescript": "5.6",
+    "vite": "5.4",
+    "vitest": "^2.1.9"
+  },
+  "private": true,
+  "type": "module"
+}

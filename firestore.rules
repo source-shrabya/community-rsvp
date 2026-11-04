@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function eventPath(eventId) {
+      return /databases/$(database)/documents/events/$(eventId);
+    }
+
+    function rsvpPath(eventId, uid) {
+      return /databases/$(database)/documents/events/$(eventId)/rsvps/$(uid);
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+
+      // Events are created by staff from the console or the seed script.
+      // Clients may only move the `taken` counter, and only by one,
+      // in the same write that adds or removes their own RSVP.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['taken'])
+        && (
+          (
+            request.resource.data.taken == resource.data.taken + 1
+            && request.resource.data.taken <= resource.data.capacity
+            && !exists(rsvpPath(eventId, request.auth.uid))
+            && existsAfter(rsvpPath(eventId, request.auth.uid))
+          ) || (
+            request.resource.data.taken == resource.data.taken - 1
+            && exists(rsvpPath(eventId, request.auth.uid))
+            && !existsAfter(rsvpPath(eventId, request.auth.uid))
+          )
+        );
+
+      match /rsvps/{uid} {
+        // People can see their own RSVP. Nobody can list who else signed up.
+        allow get: if signedIn() && request.auth.uid == uid;
+
+        allow create: if signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['name', 'createdAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 60
+          && request.resource.data.createdAt == request.time
+          && getAfter(eventPath(eventId)).data.taken == get(eventPath(eventId)).data.taken + 1;
+
+        allow delete: if signedIn()
+          && request.auth.uid == uid
+          && getAfter(eventPath(eventId)).data.taken == get(eventPath(eventId)).data.taken - 1;
+      }
+    }
+  }
+}
