@@ -55,3 +55,7 @@ firestore.rules     server-side checks
 tests/              rules tests
 scripts/seed.ts     sample events for the emulator
 ```
+
+## License
+
+MIT. See `LICENSE`.
